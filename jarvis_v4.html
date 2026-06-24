@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>자비스 v4 — 아델라한옥</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: #f0ede8;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+#app {
+  width: 100%;
+  max-width: 720px;
+  min-height: 700px;
+  background: #ffffff;
+  border-radius: 16px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.12);
+}
+
+#header {
+  background: #1a1a2e;
+  padding: 18px 24px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+#header .logo {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-size: 18px; font-weight: 700;
+  flex-shrink: 0;
+}
+#header .info .title { color: white; font-size: 16px; font-weight: 600; }
+#header .info .sub { color: rgba(255,255,255,0.45); font-size: 12px; margin-top: 2px; }
+
+#mode-bar {
+  padding: 10px 16px;
+  background: #f8f7f5;
+  border-bottom: 1px solid #ece9e3;
+  display: flex; gap: 6px; flex-wrap: wrap;
+}
+.mode-btn {
+  padding: 5px 14px;
+  border-radius: 20px;
+  border: 1px solid #d4d0c8;
+  background: white;
+  font-size: 12px;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+.mode-btn.active {
+  background: #1a1a2e;
+  color: white;
+  border-color: #1a1a2e;
+}
+.mode-btn:hover:not(.active) { background: #f0ede8; }
+
+#chat-area {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 400px;
+}
+
+.msg {
+  max-width: 82%;
+  padding: 11px 16px;
+  border-radius: 14px;
+  font-size: 14px;
+  line-height: 1.65;
+  word-break: keep-all;
+}
+.msg.user {
+  align-self: flex-end;
+  background: #1a1a2e;
+  color: white;
+  border-bottom-right-radius: 4px;
+}
+.msg.jarvis {
+  align-self: flex-start;
+  background: #f5f3ef;
+  color: #1a1a1a;
+  border-bottom-left-radius: 4px;
+  border: 1px solid #ece9e3;
+}
+.msg.jarvis .sender {
+  font-size: 11px;
+  color: #4f46e5;
+  font-weight: 600;
+  margin-bottom: 5px;
+  letter-spacing: 0.3px;
+}
+
+.typing { display: flex; gap: 5px; align-items: center; padding: 2px 0; }
+.typing span {
+  width: 7px; height: 7px;
+  background: #aaa;
+  border-radius: 50%;
+  animation: bounce 1.2s infinite;
+}
+.typing span:nth-child(2) { animation-delay: 0.2s; }
+.typing span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes bounce {
+  0%,60%,100% { transform: translateY(0); }
+  30% { transform: translateY(-7px); }
+}
+
+#voice-indicator {
+  display: none;
+  padding: 7px 16px;
+  background: #fff0f0;
+  border-top: 1px solid #ffd4d4;
+  font-size: 12px;
+  color: #dc2626;
+  align-items: center;
+  gap: 6px;
+}
+#voice-indicator.show { display: flex; }
+
+#input-area {
+  padding: 14px 16px;
+  border-top: 1px solid #ece9e3;
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+  background: white;
+}
+
+#user-input {
+  flex: 1;
+  border: 1px solid #d4d0c8;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 14px;
+  font-family: inherit;
+  color: #1a1a1a;
+  background: #faf9f7;
+  resize: none;
+  min-height: 44px;
+  max-height: 110px;
+  outline: none;
+  line-height: 1.5;
+  transition: border-color 0.15s;
+}
+#user-input:focus { border-color: #4f46e5; background: white; }
+#user-input::placeholder { color: #aaa; }
+
+.btn-icon {
+  width: 44px; height: 44px;
+  border-radius: 10px;
+  border: 1px solid #d4d0c8;
+  background: white;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: #666;
+  transition: all 0.15s;
+  font-size: 19px;
+  flex-shrink: 0;
+}
+.btn-icon:hover { background: #f5f3ef; color: #333; }
+
+#mic-btn.listening {
+  background: #fff0f0;
+  border-color: #ef4444;
+  color: #ef4444;
+  animation: pulse 1.5s infinite;
+}
+@keyframes pulse {
+  0%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.3); }
+  50% { box-shadow: 0 0 0 8px rgba(239,68,68,0); }
+}
+
+#send-btn {
+  background: #1a1a2e;
+  border-color: #1a1a2e;
+  color: white;
+}
+#send-btn:hover { background: #2d2d4a; }
+
+#clear-btn { font-size: 15px; }
+</style>
+</head>
+<body>
+
+<div id="app">
+  <div id="header">
+    <div class="logo">J</div>
+    <div class="info">
+      <div class="title">J.A.R.V.I.S.</div>
+      <div class="sub">아델라한옥 AI 어시스턴트 v4</div>
+    </div>
+  </div>
+
+  <div id="mode-bar">
+    <button class="mode-btn active" onclick="setMode('auto')" id="mode-auto">전체</button>
+    <button class="mode-btn" onclick="setMode('reservation')" id="mode-reservation">예약 문의</button>
+    <button class="mode-btn" onclick="setMode('menu')" id="mode-menu">한정식 안내</button>
+    <button class="mode-btn" onclick="setMode('sns')" id="mode-sns">SNS 카피</button>
+    <button class="mode-btn" onclick="setMode('review')" id="mode-review">리뷰 답변</button>
+    <button class="mode-btn" onclick="setMode('estimate')" id="mode-estimate">견적</button>
+  </div>
+
+  <div id="chat-area"></div>
+
+  <div id="voice-indicator">
+    <i class="ti ti-microphone"></i>
+    <span>듣고 있어요... 말씀해 주세요</span>
+  </div>
+
+  <div id="input-area">
+    <textarea id="user-input" placeholder="메시지를 입력하거나 마이크를 눌러 말씀해 주세요..." rows="1"
+      onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+    <button class="btn-icon" id="mic-btn" onclick="toggleMic()" title="음성 입력">
+      <i class="ti ti-microphone"></i>
+    </button>
+    <button class="btn-icon" id="clear-btn" onclick="clearChat()" title="대화 초기화">
+      <i class="ti ti-refresh"></i>
+    </button>
+    <button class="btn-icon" id="send-btn" onclick="sendMessage()" title="전송">
+      <i class="ti ti-send"></i>
+    </button>
+  </div>
+</div>
+
+<script>
+let currentMode = 'auto';
+let isListening = false;
+let recognition = null;
+let conversationHistory = [];
+
+function getModePrompt(mode) {
+  const prompts = {
+    auto: '사용자 의도를 파악하여 예약, 메뉴, SNS, 리뷰, 견적 등 적절한 방식으로 응답하세요.',
+    reservation: '예약 문의에 집중하세요. 날짜, 인원, 목적, 예산을 확인하고 적합한 공간을 추천하세요.',
+    menu: '한정식 A/B코스와 웰니스 프로그램을 상세히 안내하세요.',
+    sns: '아델라한옥의 분위기와 가치를 담은 인스타그램용 SNS 카피를 작성하세요. 이모지와 해시태그 포함.',
+    review: '고객 리뷰에 진심 어린 감사와 품격 있는 답변을 작성하세요.',
+    estimate: '행사 목적, 인원, 날짜, 필요 공간, 예산을 파악하여 견적 안내를 도와주세요.'
+  };
+  return prompts[mode] || prompts.auto;
+}
+
+function getSystemPrompt() {
+  return `당신은 "자비스(J.A.R.V.I.S.)"입니다. 경기도 양평에 위치한 프리미엄 전통 한옥 복합문화공간 "아델라한옥"의 전담 AI 어시스턴트입니다.
+
+【아델라한옥 기본 정보】
+- 위치: 경기도 양평군
+- 운영: 15년 전통, 박진 대표 직영
+- 구성: 해관(다목적 실내공간), 달관, 별관, 카페동, 대연회홀 (총 5개 동)
+- 주요 서비스: 웨딩, 한정식, 가족 행사, 기업 행사, 방송 촬영, 한옥 스테이
+
+【공간 안내】
+- 해관: 촬영/워크숍/기업행사용 다목적 실내공간 (주중 활성화 핵심)
+- 달관/별관: 한옥 스테이, 소규모 모임
+- 대연회홀: 웨딩, 대형 연회
+- 카페동: 음료 및 디저트
+
+【한정식 메뉴】
+- A코스: 49,000원 (기본 한정식)
+- B코스: 69,000원 (프리미엄 한정식)
+- 웰니스 당일치기 프로그램 (감성&문화, 힐링&웰니스 테마)
+
+【현재 모드: ${currentMode}】
+${getModePrompt(currentMode)}
+
+따뜻하고 격조 있는 한국어로 응답하세요. 간결하고 명확하게 안내하되, 필요시 구체적인 정보를 수집하세요.`;
+}
+
+function setMode(mode) {
+  currentMode = mode;
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('mode-' + mode).classList.add('active');
+}
+
+function addMessage(role, text) {
+  const area = document.getElementById('chat-area');
+  const div = document.createElement('div');
+  div.className = 'msg ' + (role === 'user' ? 'user' : 'jarvis');
+  if (role === 'jarvis') {
+    div.innerHTML = '<div class="sender">✦ 자비스</div>' + text.replace(/\n/g, '<br>');
+  } else {
+    div.textContent = text;
+  }
+  area.appendChild(div);
+  area.scrollTop = area.scrollHeight;
+}
+
+function addTyping() {
+  const area = document.getElementById('chat-area');
+  const div = document.createElement('div');
+  div.className = 'msg jarvis';
+  div.id = 'typing-indicator';
+  div.innerHTML = '<div class="sender">✦ 자비스</div><div class="typing"><span></span><span></span><span></span></div>';
+  area.appendChild(div);
+  area.scrollTop = area.scrollHeight;
+}
+
+function removeTyping() {
+  const t = document.getElementById('typing-indicator');
+  if (t) t.remove();
+}
+
+async function sendMessage() {
+  const input = document.getElementById('user-input');
+  const text = input.value.trim();
+  if (!text) return;
+
+  input.value = '';
+  input.style.height = 'auto';
+  addMessage('user', text);
+  conversationHistory.push({ role: 'user', content: text });
+  addTyping();
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 1000,
+        system: getSystemPrompt(),
+        messages: conversationHistory
+      })
+    });
+
+    const data = await res.json();
+    const reply = data.content?.[0]?.text || '죄송합니다, 응답을 받지 못했습니다.';
+    removeTyping();
+    conversationHistory.push({ role: 'assistant', content: reply });
+    addMessage('jarvis', reply);
+
+  } catch (e) {
+    removeTyping();
+    addMessage('jarvis', '네트워크 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.');
+  }
+}
+
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+}
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 110) + 'px';
+}
+
+function clearChat() {
+  conversationHistory = [];
+  document.getElementById('chat-area').innerHTML = '';
+  addMessage('jarvis', '대화가 초기화되었습니다. 새로 시작할게요! 😊\n\n예약 문의, 한정식 안내, SNS 카피, 리뷰 답변, 견적 상담 무엇이든 말씀해 주세요.');
+}
+
+function toggleMic() {
+  if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+    addMessage('jarvis', '이 브라우저에서는 음성 인식이 지원되지 않습니다. Chrome 브라우저를 사용해 주세요.');
+    return;
+  }
+
+  if (isListening) {
+    stopMic();
+    return;
+  }
+
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  recognition = new SR();
+  recognition.lang = 'ko-KR';
+  recognition.continuous = false;
+  recognition.interimResults = true;
+
+  recognition.onstart = () => {
+    isListening = true;
+    document.getElementById('mic-btn').classList.add('listening');
+    document.getElementById('voice-indicator').classList.add('show');
+  };
+
+  recognition.onresult = (e) => {
+    const transcript = Array.from(e.results).map(r => r[0].transcript).join('');
+    document.getElementById('user-input').value = transcript;
+  };
+
+  recognition.onend = () => {
+    stopMic();
+    const val = document.getElementById('user-input').value.trim();
+    if (val) sendMessage();
+  };
+
+  recognition.onerror = (e) => {
+    stopMic();
+    if (e.error === 'not-allowed') {
+      addMessage('jarvis', '마이크 접근 권한이 필요합니다.\n\n브라우저 주소창 왼쪽 🔒 아이콘을 클릭하여 마이크를 "허용"으로 변경해 주세요.');
+    } else if (e.error !== 'no-speech') {
+      addMessage('jarvis', '음성 인식 오류: ' + e.error);
+    }
+  };
+
+  recognition.start();
+}
+
+function stopMic() {
+  isListening = false;
+  document.getElementById('mic-btn').classList.remove('listening');
+  document.getElementById('voice-indicator').classList.remove('show');
+  if (recognition) { try { recognition.stop(); } catch(e){} }
+}
+
+window.onload = () => {
+  addMessage('jarvis', '안녕하세요! 아델라한옥 AI 어시스턴트 자비스입니다. 😊\n\n예약 문의, 한정식 안내, SNS 카피 작성, 리뷰 답변, 견적 상담 등 무엇이든 도와드리겠습니다.\n\n상단 버튼으로 모드를 선택하시거나, 🎙️ 마이크 버튼으로 말씀해 주세요!');
+};
+</script>
+</body>
+</html>
